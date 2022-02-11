@@ -1,2 +1,2 @@
-# PythonProjects
-This is a repository for my Python projects that Im doing to further my understanding of the language.
+# Downloaded-Music-Sorter
+This is a repository for the music file sorter I use to organize my downloaded music.
