@@ -1,23 +1,95 @@
-class Library:
-    def __init__(self, path):
-        self.directory_path = path
-        self.directories = []
-        self.get_directories()
-    
-    def get_directories(self):
-        pass
-
-    def add_directory(self, directory):
-        self.directories.append(directory)
-
+import os
+from pprint import pprint
 
 class Directory:
-    def __init__(self, name):
+    def __init__(self, name, path):
         self.name = name
-        self.files = []
+        self.path = path + "\\" + self.name
+        self.songs = []
+        self.check_for_directories()
+
+        if hasattr(self, 'directories') != True:
+            self.files = []
+            self.get_files()
+        else:
+            self.get_directories()
+
+    def check_for_files(self):
+        if hasattr(self, 'files') != True:
+            return False
+        else:
+            return True
+
+    def return_songs(self):
+        self.songs = []
+        if hasattr(self, 'files') != True:
+            for i in self.directories:
+                songs = i.return_songs()
+                for e in songs:
+                    self.songs.append(e)
+            return self.songs
+        else:
+            return self.files
+
+    def return_song_paths(self):
+        self.song_paths = []
+        if hasattr(self, 'files') != True:
+            for i in self.directories:
+                songs = i.return_song_paths()
+                for e in songs:
+                    self.song_paths.append(self.name + '\\' + e)
+            return self.song_paths
+        else:
+            for i in self.files:
+                self.song_paths.append(self.name + '\\' + i)
+            return self.song_paths
+        
+    def check_for_directories(self):
+        directories = [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
+        if directories != []:
+            self.hasFolders = True
+            self.directories = directories
+        else:
+            self.hasFolders = False
+            
+    def get_directories(self):
+        for i in self.directories:
+            self.directories[self.directories.index(i)] = Directory(i, self.path)
 
     def get_files(self):
-        pass
+        self.files = [f for f in os.listdir(self.path) if os.path.isfile(os.path.join(self.path, f))]
+        for i in self.files:
+            array = i.split(' - ')
+            if len(array) <= 2:
+                pass
+            else:
+                self.files[self.files.index(i)] = array[2].replace('(Explicit)', '')
 
     def add_file(self, file):
         self.files.append(file)
+
+class Library:
+    def __init__(self, path):
+        self.path = path
+        self.list_of_directories = [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
+        for i in self.list_of_directories:
+            self.list_of_directories[self.list_of_directories.index(i)] = Directory(i, self.path)
+
+        self.songs = []
+        self.get_songs()
+
+    def get_songs(self):
+        for i in self.list_of_directories:
+            songs = i.return_songs()
+            for e in songs:
+                self.songs.append(e)
+    
+    def get_song_paths(self):
+        song_paths = []
+        for i in self.list_of_directories:
+            song_path = i.return_song_paths()
+            for e in song_path:
+                song_paths.append(self.path + '\\' + e)
+        return song_paths
+
+
