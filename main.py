@@ -1,44 +1,76 @@
 import os
-from decouple import config
-from music_file import MusicFile, Artist
+import traceback
+from music_file import ConfigObject
+import sort_files_script
 
-Artists_Array = []
+config = ConfigObject()
 
-def check_for_artist_folder(name, new_file_path):
-    if(not os.path.exists(f'{new_file_path}/{name}')):
-        os.mkdir(f'{new_file_path}/{name}')
+# pip install python-magic 
+# pip install python-decouple
 
-def move_files(file_path, new_file_path):
-    for i in Artists_Array:
-        for e in i.songs:
-            artists_name = (i.name).split(', ')
-            check_for_artist_folder(artists_name[0], new_file_path)
-            os.replace(f'{file_path}/{e.full_name}',f'{new_file_path}/{artists_name[0]}/{e.Stripped_Title}')
-            
+FUNCTIONS = {
+    1: "Sort files into folders by artist name.",
+    2: "Compare two libraries to look for missing artists.",
+    3: "Compare two libraries to look for missing songs."
+}
 
-def sort_files(music):
-    for i in music:
-        artists = []
-        for e in Artists_Array:
-            artists.append(e.name)
-        if i.Artists not in artists:
-            Artists_Array.append(Artist(i.Artists, i))
-        elif i.Artists in artists:
-            Artists_Array[artists.index(i.Artists)].songs.append(i)
+CONFIG_VARIABLES = {
+    'current_playlist_filepath': "CURRENT_PLAYLIST_FILEPATH",
+    'destination_filepath': "DESTINATION_FILEPATH"
+}
 
-def get_filepath():
-    file_path = config('FILEPATH')
-    new_file_path = config('NEWFILEPATH')
-    return file_path, new_file_path
+def get_config():
+    for i in CONFIG_VARIABLES:
+        try:
+            config.add_config_value(i, CONFIG_VARIABLES[i] )
+        except Exception:
+            print(f'Could not get config value for {CONFIG_VARIABLES[i]}.')
+
+def get_function():
+    while True:
+        print('Select the function you would like to perform:')
+        for i in FUNCTIONS:
+            print(f'{i}. {FUNCTIONS[i]}')
+        selection = input()
+
+        if selection.lower() == 'exit' or selection.lower() == 'quit':
+            exit()
+        elif int(selection) not in FUNCTIONS:
+            print('That is not a valid selection, please select from the avaliable options. \n')
+        else:
+            break
+
+    return int(selection)
 
 def main():
-    file_path, new_file_path = get_filepath()
-    files = [f for f in os.listdir(file_path) if os.path.isfile(os.path.join(file_path, f))]
-    music = []
-    for i in files:
-        music.append(MusicFile(i))
-    sort_files(music)
-    move_files(file_path, new_file_path)
+    get_config()
+    selection = get_function()
+    if selection == 1:
+        try:
+            if hasattr(config, 'current_playlist_filepath') and hasattr(config, 'destination_filepath'):
+                sort_files_script.sort_files_script(config.current_playlist_filepath, config.destination_filepath)
+            else:
+                print('Config Value CURRENT_PLAYLIST_FILEPATH or DESTINATION_FILEPATH is missing.')
+        except Exception:
+            print('Could not sort music.')
+            print(traceback.format_exc())
+
+    elif selection == 2:
+        try:
+            # PUT LIBRARY ARTIST COMPARISON HERE
+            pass
+        except Exception:
+            print('Could not compare libraries.')
+            print(traceback.format_exc())
+
+    elif selection == 3:
+        try:
+            # PUT LIBRARY SONG COMPARISON HERE
+            pass
+        except Exception:
+            print('Could not compare libraries.')
+            print(traceback.format_exc())
+
         
 
 if __name__ == '__main__':
