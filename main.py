@@ -5,9 +5,6 @@ from music_file import ConfigObject
 from library import Library
 import sort_files_script
 import mutagen
-from mutagen.flac import FLAC
-from mutagen.mp3 import MP3
-from mutagen.easyid3 import EasyID3
 import shutil
 
 from pprint import pprint
@@ -68,8 +65,8 @@ def main():
     elif selection == 2:
         # library1_path = 'D:\Music\Tidal\Artists'
         # library2_path = 'I:\Music\Music Files'
-        library1_path = input('Enter filepath for the first library.')
-        library2_path = input('Enter filepath for the second library.')
+        library1_path = input('Enter filepath for the first library: ')
+        library2_path = input('Enter filepath for the second library: ')
 
         try:
             missing_songs = []
@@ -122,21 +119,26 @@ def main():
                             artist = music_details['artist'][0]
                         except Exception:
                             artist = 'Unknown'
-                            
-                        title = music_details['title'][0]
+        
+                        try:
+                            title = music_details['title'][0]
+                        except Exception:
+                            title = 'Unknown'
                         
                         if artist == '':
                             artist = 'Unkown'
-                        artist = artist.replace('/', '-')
-                        artist = artist.replace('*', '-')
+                        artist = artist.replace('/', '-').replace('*', '-').replace(':', '-').replace('"', '').replace('?', '')
 
                         if array[len(array)-1] not in combined_list:
                             pass
                         else:
-                            sort_files_script.check_for_artist_folder(artist, destination_filepath)
-                            title = title.replace('"', '').replace('?', '').replace('/', '-').replace(':', '-')
-                            shutil.copy2(i, f'{destination_filepath}/{artist}/{title}{filetype}')
-                            combined_list.pop(combined_list.index(array[len(array)-1]))
+                            try:
+                                sort_files_script.check_for_artist_folder(artist, destination_filepath)
+                                title = title.replace('"', '').replace('?', '').replace('/', '-').replace(':', '-').replace('*', '-')
+                                shutil.copy2(i, f'{destination_filepath}/{artist}/{title}{filetype}')
+                                combined_list.pop(combined_list.index(array[len(array)-1]))
+                            except Exception:
+                                pass
                     else:
                         pass
 
