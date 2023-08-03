@@ -1,0 +1,4 @@
+python-magic==0.4.27
+python-decouple==3.8
+mutagen==1.46.0
+pywin32==306
