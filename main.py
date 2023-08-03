@@ -21,6 +21,9 @@ CONFIG_VARIABLES = {
     'destination_filepath': "DESTINATION_FILEPATH"
 }
 
+consolidated_library_path = ''
+libraries_to_consolidate = ''
+
 ALLOWED_FILETYPES = [ 'mp3', 'mp4', 'flac' ]
 
 def get_config():
@@ -150,10 +153,7 @@ def main():
 
     elif selection == 3:
         try:
-            # PUT LIBRARY CONSOLIDATION HERE
-            consolidated_library_path = 'C:\\Users\\pkwp3\\Music\\Consolidated Library'
-            library1_path = 'C:\\Users\\pkwp3\\Music\\Music'
-            existing_libraries = Library(library1_path)
+            existing_libraries = Library(libraries_to_consolidate)
             files_to_sort = []
             sorted_file_identifiers = []
             sorted_files = []
