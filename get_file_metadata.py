@@ -14,7 +14,7 @@ def get_file_metadata(file_path):
     
     for i in ns.Items():
         if str(i) == file_name:
-            for j in range(0,1000):
+            for j in range(0,500):
                 _dict[ns.GetDetailsOf(j,j)] = ns.GetDetailsOf(i,j)
             break
     if (len(_dict) == 0):

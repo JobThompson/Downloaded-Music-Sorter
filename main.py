@@ -21,8 +21,8 @@ CONFIG_VARIABLES = {
     'destination_filepath': "DESTINATION_FILEPATH"
 }
 
-consolidated_library_path = ''
-libraries_to_consolidate = ''
+consolidated_library_path = 'G:\ConsolidatedMusic'
+libraries_to_consolidate = 'E:\Music'
 
 ALLOWED_FILETYPES = [ 'mp3', 'mp4', 'flac' ]
 
@@ -163,31 +163,41 @@ def main():
                     continue
                 try:
                     stats = get_file_metadata(i)
-                    print(stats['Filename'])
-                    files_to_sort.append(stats)
+                    try:
+                        file_name = f'{stats["Filename"]}'
+                        
+                        try:
+                            hasInt = int(file_name.split(' - ')[0])
+                            file_name = ' - '.join(file_name.split(' - ')[1:])
+                        except Exception:
+                            pass
+                        
+                        if stats['Title'] != '':
+                            file_name = stats['Title']
+
+                        print(f"{stats['Filename']} {stats['File extension']} BY: {stats['Authors']}")
+                        
+                        sorted_file_identifier = f"{file_name} BY: {stats['Authors']}"
+                        if(stats['Album artist'] != ''):
+                            sorted_file_identifier = f"{file_name} BY: {stats['3Album artist']}"
+
+                        if sorted_file_identifier not in sorted_file_identifiers:
+                            sorted_file_identifiers.append(sorted_file_identifier)
+                            sorted_files.append(stats["Path"])
+                        
+                    except Exception as e:
+                        print(f'Could not check if file was duplicate: {e}')
+
                 except Exception as e:
                     print(f'Could not get metadata for file: {e}')
-        
-            for i in files_to_sort:
-                try:
-                    file_name = f'{i["Filename"]}{i["File extension"]}'
-                    try:
-                        hasInt = int(file_name.split(' - ')[0])
-                        file_name = ' - '.join(file_name.split(' - ')[1:])
-                    except Exception:
-                        pass
-                        
-                    print(f"{i['Filename']} {i['File extension']} BY: {i['Authors']}")
-                    
-                    sorted_file_identifier = f"{file_name} BY: {i['Authors']}"
-                    if sorted_file_identifier not in sorted_file_identifiers:
-                        sorted_file_identifiers.append(sorted_file_identifier)
-                        sorted_files.append(f'{i["File location"]}\\{i["Filename"]}{i["File extension"]}')
-                        
-                except Exception as e:
-                    print(f'Could not check if file was duplicate: {e}')
-                    
+                
+            print('Moving Sorted Files...')
+            sorted_len = len(sorted_files)
+            index = 0
+
             for i in sorted_files:
+                index += 1
+                print(f'{index} of {sorted_len}')
                 try:
                     file_name = i.split('\\')[-1:][0]
                     try:
@@ -204,8 +214,6 @@ def main():
             print('Could not consolidate libraries.')
             print(traceback.format_exc())
 
-
-        
 
 if __name__ == '__main__':
     main()
