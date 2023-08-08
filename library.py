@@ -11,6 +11,7 @@ class Directory:
         if hasattr(self, 'directories') != True:
             self.files = []
             self.get_files()
+            self.get_file_unstripped()
         else:
             self.get_directories()
 
@@ -44,6 +45,19 @@ class Directory:
                 self.song_paths.append(self.name + '\\' + i)
             return self.song_paths
         
+    def return_song_paths_unstripped(self):
+        self.song_paths_unstripped = []
+        if hasattr(self, 'unstripped_files') != True:
+            for i in self.directories:
+                songs = i.return_song_paths_unstripped()
+                for e in songs:
+                    self.song_paths_unstripped.append(self.name + '\\' + e)
+            return self.song_paths_unstripped
+        else:
+            for i in self.unstripped_files:
+                self.song_paths_unstripped.append(self.name + '\\' + i)
+            return self.song_paths_unstripped
+        
     def check_for_directories(self):
         directories = [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
         if directories != []:
@@ -64,6 +78,9 @@ class Directory:
                 pass
             else:
                 self.files[self.files.index(i)] = array[2].replace('(Explicit)', '')
+                
+    def get_file_unstripped(self):
+         self.unstripped_files = [f for f in os.listdir(self.path) if os.path.isfile(os.path.join(self.path, f))]
 
     def add_file(self, file):
         self.files.append(file)
@@ -88,6 +105,14 @@ class Library:
         song_paths = []
         for i in self.list_of_directories:
             song_path = i.return_song_paths()
+            for e in song_path:
+                song_paths.append(self.path + '\\' + e)
+        return song_paths
+    
+    def get_song_paths_unstripped(self):
+        song_paths = []
+        for i in self.list_of_directories:
+            song_path = i.return_song_paths_unstripped()
             for e in song_path:
                 song_paths.append(self.path + '\\' + e)
         return song_paths
