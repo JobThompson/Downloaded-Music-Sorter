@@ -1,30 +1,30 @@
-from math import comb
-import os
 import traceback
 from music_file import ConfigObject
 from library import Library
 import sort_files_script
 import mutagen
 import shutil
+from get_file_metadata import get_file_metadata
 
 from pprint import pprint
 
 config = ConfigObject()
 
-# pip install python-magic 
-# pip install python-decouple
-# pip install mutagen
-
 FUNCTIONS = {
     1: "Sort files into folders by artist name.",
     2: "Compare two libraries to look for missing artists.",
-    3: "Compare two libraries to look for missing songs."
+    3: "Consolidate two libraries into one."
 }
 
 CONFIG_VARIABLES = {
     'current_playlist_filepath': "CURRENT_PLAYLIST_FILEPATH",
     'destination_filepath': "DESTINATION_FILEPATH"
 }
+
+consolidated_library_path = 'G:\ConsolidatedMusic'
+libraries_to_consolidate = 'E:\Music'
+
+ALLOWED_FILETYPES = [ 'mp3', 'mp4', 'flac' ]
 
 def get_config():
     for i in CONFIG_VARIABLES:
@@ -153,14 +153,67 @@ def main():
 
     elif selection == 3:
         try:
-            # PUT LIBRARY SONG COMPARISON HERE
-            pass
+            existing_libraries = Library(libraries_to_consolidate)
+            files_to_sort = []
+            sorted_file_identifiers = []
+            sorted_files = []
+            
+            for i in existing_libraries.get_song_paths_unstripped():
+                if i.split('.')[-1:][0] not in ALLOWED_FILETYPES:
+                    continue
+                try:
+                    stats = get_file_metadata(i)
+                    try:
+                        file_name = f'{stats["Filename"]}'
+                        
+                        try:
+                            hasInt = int(file_name.split(' - ')[0])
+                            file_name = ' - '.join(file_name.split(' - ')[1:])
+                        except Exception:
+                            pass
+                        
+                        if stats['Title'] != '':
+                            file_name = stats['Title']
+
+                        print(f"{stats['Filename']} {stats['File extension']} BY: {stats['Authors']}")
+                        
+                        sorted_file_identifier = f"{file_name} BY: {stats['Authors']}"
+                        if(stats['Album artist'] != ''):
+                            sorted_file_identifier = f"{file_name} BY: {stats['3Album artist']}"
+
+                        if sorted_file_identifier not in sorted_file_identifiers:
+                            sorted_file_identifiers.append(sorted_file_identifier)
+                            sorted_files.append(stats["Path"])
+                        
+                    except Exception as e:
+                        print(f'Could not check if file was duplicate: {e}')
+
+                except Exception as e:
+                    print(f'Could not get metadata for file: {e}')
+                
+            print('Moving Sorted Files...')
+            sorted_len = len(sorted_files)
+            index = 0
+
+            for i in sorted_files:
+                index += 1
+                print(f'{index} of {sorted_len}')
+                try:
+                    file_name = i.split('\\')[-1:][0]
+                    try:
+                        hasInt = int(file_name.split(' - ')[0])
+                        file_name = ' - '.join(file_name.split(' - ')[2:])
+                    except Exception:
+                        if len(file_name.split(' - ')) > 1:
+                            file_name = ' - '.join(file_name.split(' - ')[1:])
+                    shutil.copy2(i, f'{consolidated_library_path}\\{file_name}')
+                except Exception as e:
+                    print(f'Could not copy file: {e}')
+                    
         except Exception:
-            print('Could not compare libraries.')
+            print('Could not consolidate libraries.')
             print(traceback.format_exc())
 
-
-        
 
 if __name__ == '__main__':
     main()
