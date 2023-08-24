@@ -5,7 +5,7 @@ import traceback
 
 
 class FileConsolidator:
-    def __init__(self, library_path, allowed_file_types) -> None:
+    def __init__(self, library_path, allowed_file_types = None) -> None:
         self.library_path = library_path
         self.allowed_file_types = allowed_file_types | []
         self.files_to_sort = []

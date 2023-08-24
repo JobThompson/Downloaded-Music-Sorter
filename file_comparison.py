@@ -5,7 +5,7 @@ import mutagen
 import shutil
 
 class FileComparator:
-    def __init__(self, library1_path, library2_path) -> None:
+    def __init__(self, library1_path = None, library2_path = None) -> None:
         self.combine_user_answer = False
         self.library1_path = library1_path | input('Enter filepath for the first library: ')
         self.library2_path = library2_path | input('Enter filepath for the second library: ')
