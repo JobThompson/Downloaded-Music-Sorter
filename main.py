@@ -1,12 +1,8 @@
 import traceback
-from music_file import ConfigObject
-from library import Library
-import sort_files_script
-import mutagen
-import shutil
-from get_file_metadata import get_file_metadata
-
-from pprint import pprint
+from config import ConfigObject
+from file_sorter import FileSorter
+from file_comparison import FileComparator
+from file_consolidator import FileConsolidator
 
 config = ConfigObject()
 
@@ -52,10 +48,12 @@ def get_function():
 def main():
     get_config()
     selection = get_function()
+    sorter = FileSorter()
+    
     if selection == 1:
         try:
             if hasattr(config, 'current_playlist_filepath') and hasattr(config, 'destination_filepath'):
-                sort_files_script.sort_files_script(config.current_playlist_filepath, config.destination_filepath)
+                sorter.begin_sort_files(config.current_playlist_filepath, config.destination_filepath)
             else:
                 print('Config Value CURRENT_PLAYLIST_FILEPATH or DESTINATION_FILEPATH is missing.')
         except Exception:
@@ -63,153 +61,18 @@ def main():
             print(traceback.format_exc())
 
     elif selection == 2:
-        # library1_path = 'D:\Music\Tidal\Artists'
-        # library2_path = 'I:\Music\Music Files'
-        library1_path = input('Enter filepath for the first library: ')
-        library2_path = input('Enter filepath for the second library: ')
-
-        try:
-            missing_songs = []
-            combined_list = []
-            library_one = Library(library1_path)
-            library_two = Library(library2_path)
-
-            for i in library_one.songs:
-                if i not in library_two.songs and i not in missing_songs:
-                    missing_songs.append(i)
-                if i not in combined_list:
-                    combined_list.append(i)
-            
-            for i in library_two.songs:
-                if i not in library_one.songs and i not in missing_songs:
-                    missing_songs.append(i)
-                if i not in combined_list:
-                    combined_list.append(i)
-
-            pprint(missing_songs)
-
-            print('Do you want to combine these libraries? Y/N')
-            response = input().lower()
-
-            if response == 'y':
-                print('Where do you want the combined library to be stored? Enter the full filepath.')
-                destination_filepath = input()
-                lib1_paths = library_one.get_song_paths()
-                lib2_paths = library_two.get_song_paths()
-
-                for i in lib2_paths:
-                    lib1_paths.append(i)
-                
-                for i in lib1_paths:
-                    array = i.split('\\')
-                    music_details = mutagen.File(i)
-                    music_details.save()
-
-                    if '.mp3' in i.lower():
-                        filetype = '.mp3'
-                    elif '.mp4' in i.lower():
-                         filetype = '.mp4'
-                    elif '.flac' in i.lower():
-                         filetype = '.flac'
-                    else: 
-                        filetype = '.flac'
-
-                    if music_details is not None:
-                        try:
-                            artist = music_details['artist'][0]
-                        except Exception:
-                            artist = 'Unknown'
-        
-                        try:
-                            title = music_details['title'][0]
-                        except Exception:
-                            title = 'Unknown'
-                        
-                        if artist == '':
-                            artist = 'Unkown'
-                        artist = artist.replace('/', '-').replace('*', '-').replace(':', '-').replace('"', '').replace('?', '')
-
-                        if array[len(array)-1] not in combined_list:
-                            pass
-                        else:
-                            try:
-                                sort_files_script.check_for_artist_folder(artist, destination_filepath)
-                                title = title.replace('"', '').replace('?', '').replace('/', '-').replace(':', '-').replace('*', '-')
-                                shutil.copy2(i, f'{destination_filepath}/{artist}/{title}{filetype}')
-                                combined_list.pop(combined_list.index(array[len(array)-1]))
-                            except Exception:
-                                pass
-                    else:
-                        pass
-
-            elif response == 'n':
-                pass
-            else:
-                print('That is not a valid selection.')
-            print('Program will now terminate.')
-        except Exception:
-            print('Could not compare libraries.')
-            print(traceback.format_exc())
+        comparator = FileComparator()
+        comparator.compare_libraries()
+        comparator.get_combine_user_answer()
+        if comparator.combine_user_answer:
+            comparator.combine_libraries()
 
     elif selection == 3:
         try:
-            existing_libraries = Library(libraries_to_consolidate)
-            files_to_sort = []
-            sorted_file_identifiers = []
-            sorted_files = []
-            
-            for i in existing_libraries.get_song_paths_unstripped():
-                if i.split('.')[-1:][0] not in ALLOWED_FILETYPES:
-                    continue
-                try:
-                    stats = get_file_metadata(i)
-                    try:
-                        file_name = f'{stats["Filename"]}'
-                        
-                        try:
-                            hasInt = int(file_name.split(' - ')[0])
-                            file_name = ' - '.join(file_name.split(' - ')[1:])
-                        except Exception:
-                            pass
-                        
-                        if stats['Title'] != '':
-                            file_name = stats['Title']
-
-                        print(f"{stats['Filename']} {stats['File extension']} BY: {stats['Authors']}")
-                        
-                        sorted_file_identifier = f"{file_name} BY: {stats['Authors']}"
-                        if(stats['Album artist'] != ''):
-                            sorted_file_identifier = f"{file_name} BY: {stats['3Album artist']}"
-
-                        if sorted_file_identifier not in sorted_file_identifiers:
-                            sorted_file_identifiers.append(sorted_file_identifier)
-                            sorted_files.append(stats["Path"])
-                        
-                    except Exception as e:
-                        print(f'Could not check if file was duplicate: {e}')
-
-                except Exception as e:
-                    print(f'Could not get metadata for file: {e}')
-                
-            print('Moving Sorted Files...')
-            sorted_len = len(sorted_files)
-            index = 0
-
-            for i in sorted_files:
-                index += 1
-                print(f'{index} of {sorted_len}')
-                try:
-                    file_name = i.split('\\')[-1:][0]
-                    try:
-                        hasInt = int(file_name.split(' - ')[0])
-                        file_name = ' - '.join(file_name.split(' - ')[2:])
-                    except Exception:
-                        if len(file_name.split(' - ')) > 1:
-                            file_name = ' - '.join(file_name.split(' - ')[1:])
-                    shutil.copy2(i, f'{consolidated_library_path}\\{file_name}')
-                except Exception as e:
-                    print(f'Could not copy file: {e}')
-                    
+            consolidator = FileConsolidator(libraries_to_consolidate, ALLOWED_FILETYPES)
+            consolidator.compare_files()
+            consolidator.copy_sorted_files()
+                                
         except Exception:
             print('Could not consolidate libraries.')
             print(traceback.format_exc())
