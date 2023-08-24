@@ -14,7 +14,10 @@ class FileConsolidator:
         self.existing_libraries = Library(self.library_path)
     
     def compare_files(self):
-        for i in self.existing_libraries.get_song_paths_unstripped():
+        print("Comparing Files...")
+        file_paths_stripped = self.existing_libraries.get_song_paths_unstripped()
+        for i in file_paths_stripped:
+            print(f'Checking {i} of {len(file_paths_stripped)}', end='\r', flush=True)
             if i.split('.')[-1:][0] not in self.allowed_file_types:
                 continue
             try:
