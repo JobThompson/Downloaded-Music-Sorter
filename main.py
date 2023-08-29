@@ -1,33 +1,14 @@
 import traceback
-from config import ConfigObject
+from config import config_object
 from file_sorter import FileSorter
 from file_comparison import FileComparator
 from file_consolidator import FileConsolidator
-
-config = ConfigObject()
 
 FUNCTIONS = {
     1: "Sort files into folders by artist name.",
     2: "Compare two libraries to look for missing artists.",
     3: "Consolidate two libraries into one."
 }
-
-CONFIG_VARIABLES = {
-    'current_playlist_filepath': "CURRENT_PLAYLIST_FILEPATH",
-    'destination_filepath': "DESTINATION_FILEPATH"
-}
-
-consolidated_library_path = 'G:\ConsolidatedMusic'
-libraries_to_consolidate = 'E:\Music'
-
-ALLOWED_FILETYPES = [ 'mp3', 'mp4', 'flac' ]
-
-def get_config():
-    for i in CONFIG_VARIABLES:
-        try:
-            config.add_config_value(i, CONFIG_VARIABLES[i] )
-        except Exception:
-            print(f'Could not get config value for {CONFIG_VARIABLES[i]}.')
 
 def get_function():
     while True:
@@ -46,14 +27,13 @@ def get_function():
     return int(selection)
 
 def main():
-    get_config()
     selection = get_function()
     sorter = FileSorter()
     
     if selection == 1:
         try:
-            if hasattr(config, 'current_playlist_filepath') and hasattr(config, 'destination_filepath'):
-                sorter.begin_sort_files(config.current_playlist_filepath, config.destination_filepath)
+            if hasattr(config_object, 'current_playlist_filepath') and hasattr(config_object, 'destination_filepath'):
+                sorter.begin_sort_files(config_object.current_playlist_filepath, config_object.destination_filepath)
             else:
                 print('Config Value CURRENT_PLAYLIST_FILEPATH or DESTINATION_FILEPATH is missing.')
         except Exception:
@@ -69,7 +49,7 @@ def main():
 
     elif selection == 3:
         try:
-            consolidator = FileConsolidator(libraries_to_consolidate, ALLOWED_FILETYPES)
+            consolidator = FileConsolidator(config_object.libraries_to_consolidate, config_object.allowed_filetypes.split(','))
             consolidator.compare_files()
             consolidator.copy_sorted_files()
                                 
