@@ -1,4 +1,4 @@
-from get_file_metadata import get_file_metadata
+from get_file_metadata import get_file_metadata_mutagen
 from library import Library
 import shutil
 import traceback
@@ -21,7 +21,7 @@ class FileConsolidator:
             if i.split('.')[-1:][0] not in self.allowed_file_types:
                 continue
             try:
-                stats = get_file_metadata(i)
+                stats = get_file_metadata_mutagen(i)
                 try:
                     file_name = f'{stats["Filename"]}'    
                     try:

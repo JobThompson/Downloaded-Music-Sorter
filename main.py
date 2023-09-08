@@ -1,13 +1,18 @@
 import traceback
 from config import config_object
+from get_file_metadata import get_file_metadata_mutagen
 from file_sorter import FileSorter
 from file_comparison import FileComparator
 from file_consolidator import FileConsolidator
+from library import Library
+from music_set import MusicSet
+import os
 
 FUNCTIONS = {
     1: "Sort files into folders by artist name.",
     2: "Compare two libraries to look for missing artists.",
-    3: "Consolidate two libraries into one."
+    3: "Consolidate two libraries into one.",
+    4: "Remove duplicates."
 }
 
 def get_function():
@@ -62,6 +67,25 @@ def main():
             print('Could not consolidate libraries.')
             print(traceback.format_exc())
 
-
+    elif selection == 4:
+        music_set = MusicSet()
+        duplicates = []
+        library = Library(config_object.libraries_to_consolidate)
+        for i in library.get_song_paths():
+            metadata = get_file_metadata_mutagen(i)
+            try:
+                title = metadata['title']
+                artist = metadata['artist']
+            except Exception:
+                continue
+            if music_set.find_in_set(title, artist):
+                duplicates.append(i)
+            else:
+                music_set.add_to_set(title, artist)
+        for i in duplicates:
+            print(f'Deleting {i}')
+            os.remove(i)
+            
+        
 if __name__ == '__main__':
     main()

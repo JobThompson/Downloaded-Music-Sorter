@@ -91,7 +91,7 @@ class Library:
         self.list_of_directories = [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
         for i in self.list_of_directories:
             self.list_of_directories[self.list_of_directories.index(i)] = Directory(i, self.path)
-
+        self.list_of_directories.append(Directory('', self.path))
         self.songs = []
         self.get_songs()
 
