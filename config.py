@@ -5,7 +5,7 @@ CONFIG_VARIABLES = {
     'destination_filepath': "DESTINATION_FILEPATH",
     'consolidated_library_path': "CONSOLIDATED_LIBRARY_PATH",
     'libraries_to_consolidate': "LIBRARIES_TO_CONSOLIDATE",
-    'allowed_filetypes': "ALLOWED_FILETYPES",
+    'allowed_filetypes': "ALLOWED_FILE_TYPES",
 }
 
 class ConfigObject:

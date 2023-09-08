@@ -12,26 +12,31 @@ FUNCTIONS = {
 
 def get_function():
     while True:
-        print('Select the function you would like to perform:')
-        for i in FUNCTIONS:
-            print(f'{i}. {FUNCTIONS[i]}')
-        selection = input()
+        try:
+            print('Select the function you would like to perform:')
+            for i in FUNCTIONS:
+                print(f'{i}. {FUNCTIONS[i]}')
+            selection = input()
 
-        if selection.lower() == 'exit' or selection.lower() == 'quit':
-            exit()
-        elif int(selection) not in FUNCTIONS:
-            print('That is not a valid selection, please select from the avaliable options. \n')
-        else:
-            break
-
+            if selection.lower() == 'exit' or selection.lower() == 'quit':
+                print('Exiting program...')
+                exit()
+            elif int(selection) not in FUNCTIONS:
+                print('That is not a valid selection, please select from the available options. \n')
+            else:
+                break
+        except ValueError:
+            print('That is not a valid selection, please select from the available options. \n')
+        except Exception:
+            print(traceback.format_exc())
     return int(selection)
 
 def main():
     selection = get_function()
-    sorter = FileSorter()
     
     if selection == 1:
         try:
+            sorter = FileSorter()
             if hasattr(config_object, 'current_playlist_filepath') and hasattr(config_object, 'destination_filepath'):
                 sorter.begin_sort_files(config_object.current_playlist_filepath, config_object.destination_filepath)
             else:
