@@ -27,4 +27,8 @@ def get_file_metadata_shell(file_path):
 
 def get_file_metadata_mutagen(file_path):
     metadata = mutagen.File(file_path)
+    # print(metadata)
+    # exit()
+    if hasattr(metadata, 'data'):
+        metadata.__delattr__('data')
     return metadata

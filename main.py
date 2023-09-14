@@ -7,6 +7,8 @@ from file_consolidator import FileConsolidator
 from library import Library
 from music_set import MusicSet
 import os
+from pprint import pprint
+import shutil
 
 FUNCTIONS = {
     1: "Sort files into folders by artist name.",
@@ -68,23 +70,56 @@ def main():
             print(traceback.format_exc())
 
     elif selection == 4:
-        music_set = MusicSet()
+        flac_music_set = MusicSet()
+        mp3_music_set = MusicSet()
         duplicates = []
-        library = Library(config_object.libraries_to_consolidate)
-        for i in library.get_song_paths():
-            metadata = get_file_metadata_mutagen(i)
+        exceptions_array = []
+        onlyfiles = [f for f in  os.listdir(config_object.libraries_to_consolidate)]
+        # pprint(onlyfiles)
+        # exit()
+        for i in onlyfiles:
+            file_path = os.path.join(config_object.libraries_to_consolidate, i)
+            metadata = get_file_metadata_mutagen(file_path)
+            # print(metadata)
+
+           
+            
             try:
                 title = metadata['title']
                 artist = metadata['artist']
             except Exception:
-                continue
-            if music_set.find_in_set(title, artist):
-                duplicates.append(i)
+                try:
+                    title = metadata['TIT2']
+                    artist = metadata['TPE2']
+                except Exception:
+                    exceptions_array.append(file_path)
+                    print(f'{metadata.keys()} {file_path.split(".")[-1]}')
+                    continue
+
+            if file_path.split('.')[-1] == 'mp3':
+                if mp3_music_set.find_in_set(title, artist):
+                    duplicates.append(file_path)
+                else:
+                    mp3_music_set.add_to_set(title, artist)
             else:
-                music_set.add_to_set(title, artist)
+                if flac_music_set.find_in_set(title, artist):
+                    duplicates.append(file_path)
+                else:
+                    flac_music_set.add_to_set(title, artist)
+                
+        for i in mp3_music_set.title_artist_set:
+            if i in flac_music_set.title_artist_set:
+                print(f'flac found for {i}')
+
         for i in duplicates:
             print(f'Deleting {i}')
             os.remove(i)
+
+        # for i in exceptions_array:
+        #     file_namespace = '\\'.join(file_path.split('\\')[:-1])
+        #     dest = i.replace(file_namespace, 'H:\\Music\\Music\\New folder')
+        #     shutil.move(i, dest)
+        #     print(f'moved {i}')
             
         
 if __name__ == '__main__':

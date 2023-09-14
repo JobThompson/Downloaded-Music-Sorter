@@ -38,11 +38,17 @@ class Directory:
             for i in self.directories:
                 songs = i.return_song_paths()
                 for e in songs:
-                    self.song_paths.append(self.name + '\\' + e)
+                    if self.name != "":
+                        self.song_paths.append(self.name + '\\' + e)
+                    else:
+                        self.song_paths.append(e)
             return self.song_paths
         else:
             for i in self.files:
-                self.song_paths.append(self.name + '\\' + i)
+                if self.name != "":
+                    self.song_paths.append(self.name + '\\' + i)
+                else:
+                    self.song_paths.append(i)
             return self.song_paths
         
     def return_song_paths_unstripped(self):
@@ -106,7 +112,7 @@ class Library:
         for i in self.list_of_directories:
             song_path = i.return_song_paths()
             for e in song_path:
-                song_paths.append(self.path + '\\' + e)
+                song_paths.append(f'{self.path}\{e}')
         return song_paths
     
     def get_song_paths_unstripped(self):
