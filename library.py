@@ -1,120 +1,66 @@
-import os
-from pprint import pprint
+from __future__ import annotations
 
-class Directory:
-    def __init__(self, name, path):
-        self.name = name
-        self.path = path + "\\" + self.name
-        self.songs = []
-        self.check_for_directories()
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterable
 
-        if hasattr(self, 'directories') != True:
-            self.files = []
-            self.get_files()
-            self.get_file_unstripped()
-        else:
-            self.get_directories()
 
-    def check_for_files(self):
-        if hasattr(self, 'files') != True:
-            return False
-        else:
-            return True
+DEFAULT_AUDIO_EXTENSIONS = {".mp3", ".mp4", ".flac", ".m4a", ".wav", ".ogg"}
 
-    def return_songs(self):
-        self.songs = []
-        if hasattr(self, 'files') != True:
-            for i in self.directories:
-                songs = i.return_songs()
-                for e in songs:
-                    self.songs.append(e)
-            return self.songs
-        else:
-            return self.files
 
-    def return_song_paths(self):
-        self.song_paths = []
-        if hasattr(self, 'files') != True:
-            for i in self.directories:
-                songs = i.return_song_paths()
-                for e in songs:
-                    self.song_paths.append(self.name + '\\' + e)
-            return self.song_paths
-        else:
-            for i in self.files:
-                self.song_paths.append(self.name + '\\' + i)
-            return self.song_paths
-        
-    def return_song_paths_unstripped(self):
-        self.song_paths_unstripped = []
-        if hasattr(self, 'unstripped_files') != True:
-            for i in self.directories:
-                songs = i.return_song_paths_unstripped()
-                for e in songs:
-                    self.song_paths_unstripped.append(self.name + '\\' + e)
-            return self.song_paths_unstripped
-        else:
-            for i in self.unstripped_files:
-                self.song_paths_unstripped.append(self.name + '\\' + i)
-            return self.song_paths_unstripped
-        
-    def check_for_directories(self):
-        directories = [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
-        if directories != []:
-            self.hasFolders = True
-            self.directories = directories
-        else:
-            self.hasFolders = False
-            
-    def get_directories(self):
-        for i in self.directories:
-            self.directories[self.directories.index(i)] = Directory(i, self.path)
+def normalize_track_name(file_name: str) -> str:
+    """Normalize track names for duplicate detection across naming schemes."""
+    stem = Path(file_name).stem
+    parts = [part.strip() for part in stem.split(" - ")]
+    if len(parts) >= 3:
+        stem = " - ".join(parts[2:])
+    return stem.replace("(Explicit)", "").strip().casefold()
 
-    def get_files(self):
-        self.files = [f for f in os.listdir(self.path) if os.path.isfile(os.path.join(self.path, f))]
-        for i in self.files:
-            array = i.split(' - ')
-            if len(array) <= 2:
-                pass
-            else:
-                self.files[self.files.index(i)] = array[2].replace('(Explicit)', '')
-                
-    def get_file_unstripped(self):
-         self.unstripped_files = [f for f in os.listdir(self.path) if os.path.isfile(os.path.join(self.path, f))]
 
-    def add_file(self, file):
-        self.files.append(file)
+@dataclass(frozen=True, slots=True)
+class LibraryTrack:
+    """Represents one audio file discovered while scanning a library."""
+
+    path: Path
+
+    @property
+    def file_name(self) -> str:
+        return self.path.name
+
+    @property
+    def normalized_name(self) -> str:
+        return normalize_track_name(self.file_name)
+
 
 class Library:
-    def __init__(self, path):
-        self.path = path
-        self.list_of_directories = [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
-        for i in self.list_of_directories:
-            self.list_of_directories[self.list_of_directories.index(i)] = Directory(i, self.path)
+    """Scans a root directory recursively and exposes discovered tracks."""
 
-        self.songs = []
-        self.get_songs()
+    def __init__(self, root_path: str, allowed_extensions: Iterable[str] | None = None):
+        self.root = Path(root_path)
+        self.allowed_extensions = {
+            ext if ext.startswith(".") else f".{ext}"
+            for ext in (allowed_extensions or DEFAULT_AUDIO_EXTENSIONS)
+        }
+        self.tracks = self._scan_tracks()
+        self.songs = [track.normalized_name for track in self.tracks]
 
-    def get_songs(self):
-        for i in self.list_of_directories:
-            songs = i.return_songs()
-            for e in songs:
-                self.songs.append(e)
-    
-    def get_song_paths(self):
-        song_paths = []
-        for i in self.list_of_directories:
-            song_path = i.return_song_paths()
-            for e in song_path:
-                song_paths.append(self.path + '\\' + e)
-        return song_paths
-    
-    def get_song_paths_unstripped(self):
-        song_paths = []
-        for i in self.list_of_directories:
-            song_path = i.return_song_paths_unstripped()
-            for e in song_path:
-                song_paths.append(self.path + '\\' + e)
-        return song_paths
+    def _scan_tracks(self) -> list[LibraryTrack]:
+        """Collect all files matching supported extensions from the root."""
+        discovered: list[LibraryTrack] = []
+        if not self.root.exists() or not self.root.is_dir():
+            return discovered
+
+        for path in self.root.rglob("*"):
+            if path.is_file() and path.suffix.lower() in self.allowed_extensions:
+                discovered.append(LibraryTrack(path=path))
+        return discovered
+
+    def get_song_paths(self) -> list[str]:
+        """Return all discovered track paths as strings."""
+        return [str(track.path) for track in self.tracks]
+
+    def get_song_paths_unstripped(self) -> list[str]:
+        """Compatibility wrapper for previous API naming."""
+        return self.get_song_paths()
 
 
